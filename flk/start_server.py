@@ -6,6 +6,7 @@ import io
 import json
 import base64
 from PIL import Image
+import sys
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -23,7 +24,8 @@ def exfeature():
     # decode image
     keyname = r['keyname']
     # do some fancy processing here....
-
+    print('Data',file=sys.stdout)
+    print('Error',file=sys.stderr)
     # build a response dict to send back to client
     response = {'message': 'image received. size={}'.format(img.shape),'device':keyname}
     # encode response using jsonpickle
