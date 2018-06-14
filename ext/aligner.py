@@ -249,7 +249,7 @@ class ONet(Network):
              .fc(10, relu=False, name='conv6-3'))
 
 def create_mtcnn(sess, devices, batch_size):
-    model_path = 'models'
+    model_path = '/root/server/ext/models'
     assert batch_size % len(devices) == 0
     bspd = batch_size // len(devices)
     with tf.name_scope('aligner'):
@@ -992,20 +992,26 @@ class aligner:
             _bbox = None
             _landmark = None
             if nrof_faces>0:
-                det = bounding_boxes[:,0:4]
-                img_size = np.asarray(img.shape)[0:2]
-                bindex = 0
-                if nrof_faces>1:
-                    bounding_box_size = (det[:,2]-det[:,0])*(det[:,3]-det[:,1])
-                    img_center = img_size / 2
-                    offsets = np.vstack([ (det[:,0]+det[:,2])/2-img_center[1], (det[:,1]+det[:,3])/2-img_center[0] ])
-                    offset_dist_squared = np.sum(np.power(offsets,2.0),0)
-                    bindex = np.argmax(bounding_box_size-offset_dist_squared*2.0) # some extra weight on the centering
-                _bbox = bounding_boxes[bindex, 0:4]
-                _landmark = points[:, bindex].reshape( (2,5) ).T
-            warped = preprocess(img, bbox=_bbox, landmark = _landmark, image_size=(112, 112))
-            bgr = warped[...,::-1]
-            results.append(bgr)
+                #det = bounding_boxes[:,0:4]
+                #img_size = np.asarray(img.shape)[0:2]
+                #bindex = 0
+                #if nrof_faces>1:
+                #    bounding_box_size = (det[:,2]-det[:,0])*(det[:,3]-det[:,1])
+                #    img_center = img_size / 2
+                #    offsets = np.vstack([ (det[:,0]+det[:,2])/2-img_center[1], (det[:,1]+det[:,3])/2-img_center[0] ])
+                    #offset_dist_squared = np.sum(np.power(offsets,2.0),0)
+                    #bindex = np.argmax(bounding_box_size-offset_dist_squared*2.0) # some extra weight on the centering
+                #print(nrof_faces)
+                for bindex in range(nrof_faces):
+                    _bbox = bounding_boxes[bindex, 0:4]
+                    _landmark = points[:, bindex].reshape( (2,5) ).T
+                    warped = preprocess(img, bbox=_bbox, landmark = _landmark, image_size=(112, 112))
+                    bgr = warped[...,::-1]
+                    results.append(bgr)
+            else:
+                warped = preprocess(img, bbox=_bbox, landmark = _landmark, image_size=(112, 112))
+                bgr = warped[...,::-1]
+                results.append(bgr)
         return results
 
         

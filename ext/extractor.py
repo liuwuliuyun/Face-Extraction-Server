@@ -107,7 +107,7 @@ class extractor:
         with tf.name_scope('extractor'):
             with tf.device('/cpu:0'):
                 self.images = tf.placeholder(
-                    tf.float32, (1, 112, 112, 3), 'images')
+                    tf.float32, (None, 112, 112, 3), 'images')
                 embeddings = []
             with tf.device(device):
                 local_embeddings = network(self.images)
@@ -115,7 +115,7 @@ class extractor:
             with tf.device('cpu:0'):
                 self.embeddings = embeddings[0] 
         saver = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='extractor//mobilenet'))
-        saver.restore(session, 'models/extractor')
+        saver.restore(session, '/root/server/ext/models/extractor')
         #output_graph_def = tf.graph_util.convert_variables_to_constants(session, session.graph.as_graph_def(), [self.embeddings.name[:-2]])
         #tflite_model = tf.contrib.lite.toco_convert(output_graph_def, [self.images], [self.embeddings])
         #open("converteds_model.tflite", "wb").write(tflite_model)
