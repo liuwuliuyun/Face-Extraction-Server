@@ -7,7 +7,7 @@ with open(imgfile,"rb")as image_file:
 connection = pika.BlockingConnection(pika.ConnectionParameters('127.0.0.1'))
 channel = connection.channel()
 
-channel.queue_declare(queue='hello')
+channel.queue_declare(queue='hello', durable = True)
 
 channel.basic_publish(exchange='',
                       routing_key='hello',

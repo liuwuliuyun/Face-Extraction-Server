@@ -40,6 +40,6 @@ work('/cpu:0', queue_in, queue_out)
 for i in range(len(queue_out)):
     for j in range(len(queue_out)):
         if i<j:
-            print(np.dot(queue_out[i],queue_out[j]))
+            print('image {} and {} similarity is {}'.format(i,j,np.dot(queue_out[i],queue_out[j])))
 
 
