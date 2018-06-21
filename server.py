@@ -12,6 +12,7 @@ import pika
 import base64
 import jsonpickle
 #from multiprocessing import Process, Queue
+from threading import Lock
 from flask import Flask, request, Response
 from PIL import Image
 from ext.extractor import extractor
@@ -24,6 +25,7 @@ connection = pika.BlockingConnection(pika.ConnectionParameters('127.0.0.1'))
 channel = connection.channel()
 channel.queue_declare(queue = 'worker_queue', durable = True)
 
+lock = Lock()
 
 @app.route('/cfdserver/exfeature', methods=['POST'])
 def exfeature():
@@ -34,6 +36,7 @@ def exfeature():
     keyname = r['keyname']
     #TODO check queue length before publish
     #TODO send keyname with image
+    '''
     try:
         channel.basic_publish(exchange='',routing_key='worker_queue',body=encoded_data)
         #TODO discard new image if queue is full
@@ -44,6 +47,15 @@ def exfeature():
         response = {'message': 'image received failed, server busy, plz retry'}
         response_pickled = jsonpickle.encode(response)
         return Response(response=response_pickled, status=503, mimetype='application/json')
+    '''
+    with lock:
+        channel.basic_publish(exchange='',routing_key='worker_queue',body=encoded_data)
+
+    #TODO discard new image if queue is full
+    response = {'message': 'image received successful', 'device':keyname}
+    response_pickled = jsonpickle.encode(response)
+    return Response(response=response_pickled, status=200, mimetype="application/json")
+    
 
 if __name__ == "__main__":
     connection = pika.BlockingConnection(pika.ConnectionParameters('127.0.0.1'))
