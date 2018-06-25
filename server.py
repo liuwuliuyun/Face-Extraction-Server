@@ -34,20 +34,9 @@ def exfeature():
     #decode image file
     encoded_data = r['img']
     keyname = r['keyname']
+    encoded_data = keyname + encoded_data
     #TODO check queue length before publish
     #TODO send keyname with image
-    '''
-    try:
-        channel.basic_publish(exchange='',routing_key='worker_queue',body=encoded_data)
-        #TODO discard new image if queue is full
-        response = {'message': 'image received successful', 'device':keyname}
-        response_pickled = jsonpickle.encode(response)
-        return Response(response=response_pickled, status=200, mimetype="application/json")
-    except:
-        response = {'message': 'image received failed, server busy, plz retry'}
-        response_pickled = jsonpickle.encode(response)
-        return Response(response=response_pickled, status=503, mimetype='application/json')
-    '''
     with lock:
         channel.basic_publish(exchange='',routing_key='worker_queue',body=encoded_data)
 
