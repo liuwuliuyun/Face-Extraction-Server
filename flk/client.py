@@ -9,7 +9,7 @@ import time
 addr = 'http://localhost:5000'
 test_url = addr + '/cfdserver/exfeature'
 keyname = 'device_01'
-imgfile = '/root/server/testimg/img004.jpg'
+imgfile = '/root/server/testimg/img009.jpg'
 numofthread = int(sys.argv[1])
 
 
