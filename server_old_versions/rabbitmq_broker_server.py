@@ -8,9 +8,10 @@ import logging
 import tensorflow as tf
 import time
 import random
+import pika
 import base64
 import jsonpickle
-import zmq
+#from multiprocessing import Process, Queue
 from threading import Lock
 from flask import Flask, request, Response
 from PIL import Image
@@ -20,9 +21,9 @@ from ext.aligner import aligner
 #global flask and celery implementation
 app = Flask(__name__)
 
-context = zmq.Context()
-zmq_socket = context.socket(zmq.PUSH)
-zmq_socket.bind("tcp://127.0.0.1:5557")
+connection = pika.BlockingConnection(pika.ConnectionParameters('127.0.0.1'))
+channel = connection.channel()
+channel.queue_declare(queue = 'worker_queue', durable = True)
 
 lock = Lock()
 
@@ -37,7 +38,8 @@ def exfeature():
     #TODO check queue length before publish
     #TODO send keyname with image
     with lock:
-        zmq_socket.send_string(encoded_data)
+        channel.basic_publish(exchange='',routing_key='worker_queue',body=encoded_data)
+
     #TODO discard new image if queue is full
     response = {'message': 'image received successful', 'device':keyname}
     response_pickled = jsonpickle.encode(response)

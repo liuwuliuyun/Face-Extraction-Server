@@ -2,13 +2,16 @@ import tensorflow as tf
 import numpy as np
 import sys
 import time
-import pika
 import base64
+import zmq
 import cv2
 import io
+import os
 from PIL import Image
 from ext.extractor import extractor
 from ext.aligner import aligner
+
+
 #TODO set different gpu devices
 device = '/gpu:1'
 
@@ -20,28 +23,30 @@ session = tf.Session(config = config)
 Extractor = extractor(session, [device], 1)
 Aligner = aligner(session, [device], 1)
 
-connection = pika.BlockingConnection(pika.ConnectionParameters('127.0.0.1'))
-channel = connection.channel()
-channel.queue_declare(queue='worker_queue',durable=True)
+context = zmq.Context()
 
-def callback(ch, method, properties, body):
-    try:
-        start = time.time()
-        encoded_data = body
-        key = encoded_data[0:9]
-        encoded_data = encoded_data[9:]
-        img_data = base64.b64decode(encoded_data)
-        image = Image.open(io.BytesIO(img_data))
-        img = cv2.cvtColor(np.array(image),cv2.IMREAD_COLOR)
-        image = np.stack([image],axis=0)
-        image = Aligner.align(image)
-        features = Extractor.extract(image)
-        #TODO send features to database to compare
-        print('[CFDS WORKER LOG]Worker_1: Length of feature is {}\n \t \t Time used is {} s'.format(len(features), time.time()-start))
-        #ch.basic_ack(delivery_tag = method.delivery_tag)
-    except:
-        print('[CFDS WORKER LOG]Worker_1: Internal Error Occurred')
-        #ch.basic_ack(delivery_tag = method.delivery_tag)
+consumer_receiver = context.socket(zmq.PULL)
+consumer_receiver.connect('tcp://127.0.0.1:5557')
+
+consumer_sender = context.socket(zmq.PUSH)
+consumer_sender.connect('tcp://127.0.0.1:5558')
+
 if __name__=='__main__':
-    channel.basic_consume(callback,queue='worker_queue',no_ack=True)
-    channel.start_consuming()
+
+    while True:
+        try:
+            start = time.time()
+            encoded_data = consumer_receiver.recv_string()
+            key = encoded_data[0:9]
+            encoded_data = encoded_data[9:]
+            img_data = base64.b64decode(encoded_data)
+            image = Image.open(io.BytesIO(img_data))
+            img = cv2.cvtColor(np.array(image),cv2.IMREAD_COLOR)
+            image = np.stack([image],axis=0)
+            image = Aligner.align(image)
+            features = Extractor.extract(image)
+            print('[CFDS WORKER LOG]Worker_0: Length of feature is {}\n \t \t Time used is {} s'.format(len(features), time.time()-start))
+        except:
+            print('[CFDS WORKER LOG]Worker_0: Internal Error Occurred')
+            break
+
