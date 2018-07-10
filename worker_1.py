@@ -26,15 +26,17 @@ Aligner = aligner(session, [device], 1)
 context = zmq.Context()
 
 consumer_receiver = context.socket(zmq.PULL)
+consumer_receiver.setsockopt(zmq.SNDHWM, 1000)
 consumer_receiver.connect('tcp://127.0.0.1:5557')
 
 consumer_sender = context.socket(zmq.PUSH)
+consumer_sender.setsockopt(zmq.RCVHWM, 1000)
 consumer_sender.connect('tcp://127.0.0.1:5558')
 
 if __name__=='__main__':
 
     while True:
-        try:
+        #try:
             start = time.time()
             encoded_data = consumer_receiver.recv_string()
             key = encoded_data[0:9]
@@ -46,7 +48,13 @@ if __name__=='__main__':
             image = Aligner.align(image)
             features = Extractor.extract(image)
             print('[CFDS WORKER LOG]Worker_0: Length of feature is {}\n \t \t Time used is {} s'.format(len(features), time.time()-start))
-        except:
-            print('[CFDS WORKER LOG]Worker_0: Internal Error Occurred')
-            break
+            if len(features)>0:
+                for feature in features:
+                    data_to_dump = key.encode('utf-8')+feature.tostring()
+                    consumer_sender.send(data_to_dump)
+            
+        #except Exception as e:
+        #    print(e)
+        #    print('[CFDS WORKER LOG]Worker_0: Internal Error Occurred')
+        #    break
 
