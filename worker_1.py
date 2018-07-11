@@ -44,7 +44,7 @@ if __name__=='__main__':
             img_data = base64.b64decode(encoded_data)
             image = Image.open(io.BytesIO(img_data))
             img = cv2.cvtColor(np.array(image),cv2.IMREAD_COLOR)
-            image = np.stack([image],axis=0)
+            image = np.stack([img],axis=0)
             image = Aligner.align(image)
             features = Extractor.extract(image)
             print('[CFDS WORKER LOG]Worker_0: Length of feature is {}\n \t \t Time used is {} s'.format(len(features), time.time()-start))
