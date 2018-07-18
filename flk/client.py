@@ -6,9 +6,9 @@ import threading
 import sys
 import time
 
-addr = 'http://localhost:5000'
+addr = 'http://127.0.0.1:5000'
 test_url = addr + '/cfdserver/exfeature'
-keyname = 'device_01'
+keyname = 'device00R'
 imgfile = '/root/server/testimg/img009.jpg'
 numofthread = int(sys.argv[1])
 
